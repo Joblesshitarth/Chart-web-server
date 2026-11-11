@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport"  content="width=device-width", initial-scale="1">
+<title>ESP32 Weather Station</title>
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<style> 
+body { min-width:310px;
+       max-width:800px;
+       margin:0 auto;
+       font-family:Ariel,sans-serif;
+    }
+    h2 { font-size:2rem;
+         text-align:center;
+    }
+</style>
+</head>
+<body>
+<h2>ESP Weather station</h2>
+<div id="chart-temperature"></div>
+<div id="chart-humidity"></div>
+<div id="chart-pressure"></div>
+<script>
+const sensors=[
+    {
+        id:'chart-temperature',
+        endpoint:'/temperature',
+        title:'Temperature',
+        unit:'Temperature (Celsius)'
+        color: '#059e8a'
+    },
+    {
+        id:'chart-humidity',
+        endpoint:'/humidity',
+        title:'humidity',
+        unit:'Humidity (%)',
+        color:'#18009c'
+    }
+
+];
+function createChart(sensor){
+    return Highcharts.chart(sensor.id ,{
+        title: {
+            text:sensor.title
+        },
+        series: [{
+            showInLegend:false,
+            data:[]
+        }],
+        plotOptions:{
+            line:{
+                animation:false,
+                dataLabels:{
+                    enabled:true
+                }
+            },
+            series:{
+                color:sensor.color
+            }
+        },
+        xAxis:{
+            type:'datetime',
+            dateTimeLabelFormat :{
+                second:'%H:%M:%S'
+            }
+        },
+        yAxis:{
+            title:{
+                text:sensor.unit
+            }
+        },
+        credits: {
+            enabled:false
+        }
+    }),
+}
+async function updateSensor(sensor){
+    try{
+         const response=await fetch(sensor.endpoint);
+        if (!resposne.ok){
+            throw new Error(`HTTP ${response.status}`);
+        }
+    const raw=await response.text();
+    const value=Number(raw);
+  if (!raw.trim() || !Number.isFinite(value)) {
+          throw new Error('Invalid sensor reading');
+        }
+
+        const series = sensor.chart.series[0];
+
+        series.addPoint(
+          [Date.now(), value],
+          true,
+          series.data.length >= 40,
+          false
+        );
+
+      } catch (error) {
+        console.error(`${sensor.title}:`, error);
+      }
+    }
+
+    // Initialize dashboard
+    sensors.forEach(sensor => {
+
+      sensor.chart = createChart(sensor);
+
+      updateSensor(sensor);
+
+      setInterval(() => {
+        updateSensor(sensor);
+      }, 30000);
+
+    });
+
+  </script>
+
+</body>
+</html>
