@@ -27,7 +27,7 @@ const sensors=[
         id:'chart-temperature',
         endpoint:'/temperature',
         title:'Temperature',
-        unit:'Temperature (Celsius)'
+        unit:'Temperature (Celsius)',
         color: '#059e8a'
     },
     {
@@ -74,7 +74,7 @@ function createChart(sensor){
             enabled:false
         }
     }),
-}
+}   
 async function updateSensor(sensor){
     try{
          const response=await fetch(sensor.endpoint);
